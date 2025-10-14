@@ -189,10 +189,12 @@ class Portfolio:
         """
         Plot the correlation and covariance matrix.
         Plot both as side by side heatmaps, with stock names for each row/col.
+        Show numbers for each element in the matrices.
         """
         fig, axes = plt.subplots(1, 2, constrained_layout=True)
 
         stock_names = self.stock_names 
+        # Correlation matrix plot
         im1 = axes[0].imshow(self.corr_matrix, cmap='coolwarm', interpolation='none', vmin=np.min(self.corr_matrix), vmax=np.max(self.corr_matrix))
         axes[0].set_title('Correlation Matrix')
         axes[0].set_xticks(np.arange(len(stock_names)))
@@ -200,6 +202,17 @@ class Portfolio:
         axes[0].set_yticks(np.arange(len(stock_names)))
         axes[0].set_yticklabels(stock_names, fontsize=8)
         plt.colorbar(im1, ax=axes[0], fraction=0.046, pad=0.04)
+        # Add numbers to each cell
+        for i in range(self.corr_matrix.shape[0]):
+            for j in range(self.corr_matrix.shape[1]):
+                axes[0].text(
+                    j, i, f"{self.corr_matrix[i, j]:.2f}",
+                    ha="center", va="center",
+                    color="black" if abs(self.corr_matrix[i, j]) < 0.7 else "white",
+                    fontsize=9
+                )
+
+        # Covariance matrix plot
         im2 = axes[1].imshow(self.cov_matrix, cmap='coolwarm', interpolation='none', vmin=np.min(self.cov_matrix), vmax=np.max(self.cov_matrix))
         axes[1].set_title('Covariance Matrix')
         axes[1].set_xticks(np.arange(len(stock_names)))
@@ -207,6 +220,16 @@ class Portfolio:
         axes[1].set_yticks(np.arange(len(stock_names)))
         axes[1].set_yticklabels(stock_names, fontsize=8)
         plt.colorbar(im2, ax=axes[1], fraction=0.046, pad=0.04)
+        # Add numbers to each cell
+        for i in range(self.cov_matrix.shape[0]):
+            for j in range(self.cov_matrix.shape[1]):
+                axes[1].text(
+                    j, i, f"{self.cov_matrix[i, j]:.2e}",
+                    ha="center", va="center",
+                    color="black" if abs(self.cov_matrix[i, j]) < np.max(np.abs(self.cov_matrix)) / 2 else "white",
+                    fontsize=9
+                )
+
         plt.show()
 
 

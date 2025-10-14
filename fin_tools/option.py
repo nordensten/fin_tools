@@ -165,9 +165,9 @@ class Option:
         ax[0].set_yticklabels([f'{iv:.1%}' for iv in np.sort(np.concatenate((self.implied_volatilities, self.estimated_iv)))])
 
         ax[1].plot(self.strikes, (self.implied_volatilities - self.estimated_iv) / self.estimated_iv, marker='o', color='blue')
-        ax[1].set_title('Relative Difference between Market IV and Estimated IV')
+        ax[1].set_title('Relative Error of IVs')
         ax[1].set_xlabel('K')
-        ax[1].set_ylabel('rel. difference')
+        ax[1].set_ylabel('rel. error')
         ax[1].set_xticks(self.strikes)
         ax[1].set_xticklabels([str(k) for k in self.strikes])
         ax[1].set_yticks((self.implied_volatilities - self.estimated_iv) / self.estimated_iv)
@@ -320,7 +320,7 @@ class Option:
                     "C (B&S)",
                     "IV (B&S)",
                     "IV (Market)",
-                    "rel.diff. IV [%]",
+                    "rel. error. IV [%]",
                 ]
                 print("Calculated Overview")
                 print(" ")
