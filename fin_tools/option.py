@@ -315,12 +315,12 @@ class Option:
 
                 headers = [
                     "Strike",
-                    "Last Price",
-                    "Price (Bid/Ask Avg)",
-                    "B&S Call Price",
-                    "B&S IV",
-                    "Market IV",
-                    "IV: Relative Difference (%)",
+                    "Last C",
+                    "C (Bid/Ask Avg)",
+                    "C (B&S)",
+                    "IV (B&S)",
+                    "IV (Market)",
+                    "rel.diff. IV [%]",
                 ]
                 print("Calculated Overview")
                 print(" ")
