@@ -195,7 +195,7 @@ class Portfolio:
 
         stock_names = self.stock_names 
         # Correlation matrix plot
-        im1 = axes[0].imshow(self.corr_matrix, cmap='coolwarm', interpolation='none', vmin=np.min(self.corr_matrix), vmax=np.max(self.corr_matrix))
+        im1 = axes[0].imshow(self.corr_matrix, cmap='Greys', interpolation='none', vmin=np.min(self.corr_matrix), vmax=np.max(self.corr_matrix))
         axes[0].set_title('Correlation Matrix')
         axes[0].set_xticks(np.arange(len(stock_names)))
         axes[0].set_xticklabels(stock_names, rotation=45, ha='right', fontsize=8)
@@ -213,7 +213,7 @@ class Portfolio:
                 )
 
         # Covariance matrix plot
-        im2 = axes[1].imshow(self.cov_matrix, cmap='coolwarm', interpolation='none', vmin=np.min(self.cov_matrix), vmax=np.max(self.cov_matrix))
+        im2 = axes[1].imshow(self.cov_matrix, cmap='Greys', interpolation='none', vmin=np.min(self.cov_matrix), vmax=np.max(self.cov_matrix))
         axes[1].set_title('Covariance Matrix')
         axes[1].set_xticks(np.arange(len(stock_names)))
         axes[1].set_xticklabels(stock_names, rotation=45, ha='right', fontsize=8)
