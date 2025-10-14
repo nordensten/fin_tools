@@ -35,13 +35,25 @@ class Portfolio:
         self.inv_cov_matrix = None
         self.inv_corr_matrix = None
 
+        # efficient frontier variables
+        self.ef_mu = None
+        self.ef_vol = None
+        self.ef_mu_min = None
+        self.ef_vol_min = None
+
 
     def add_stock(self, stock):
+        """
+        Add a stock to the portfolio.
+        """
         self.stocks.append(stock)
         self.n_stocks += 1
         self.stock_names.append(stock.get_stock_name())
 
     def add_stocks(self, stocks):
+        """
+        Add a list of stocks to the portfolio.
+        """
         for i in range(len(stocks)):
             self.add_stock(stocks[i])
 
@@ -49,6 +61,9 @@ class Portfolio:
 
 
     def remove_stock(self, stock_name):
+        """
+        Remove a stock from the portfolio.
+        """
         for stock in self.stocks:
             if stock.get_stock_name() == stock_name:
                 self.stocks.remove(stock)
@@ -57,12 +72,18 @@ class Portfolio:
         self.initialize_portfolio()
 
     def copy(self):
-        new_portfolio = self.__class__()  # Allow inheritence: new object is of the same class as self
-        new_portfolio.add_stocks(self.stocks)   # Add the stocks to the new portfolio
-        return new_portfolio
+        """
+        Copy the portfolio.
+        """
+        pfcopy = self.__class__()  
+        pfcopy.add_stocks(self.stocks)   
+        return pfcopy
 
 
     def initialize_portfolio(self):
+        """
+        Initialize the portfolio variables.
+        """
         self.stock_matrix = np.array([stock.get_stock_price() for stock in self.stocks])
         self.returns_matrix = np.array([stock.get_returns() for stock in self.stocks])
         self.volatility_vector = np.array([stock.get_volatility() for stock in self.stocks])
@@ -73,16 +94,19 @@ class Portfolio:
         self.cov_matrix = np.cov(self.returns_matrix)
         self.corr_matrix = np.corrcoef(self.returns_matrix)
         self.inv_cov_matrix = np.linalg.inv(self.cov_matrix)
-        self.inv_corr_matrix = np.linalg.inv(self.corr_matrix)
+        
+        self.ef_mu, self.ef_vol, self.ef_mu_min, self.ef_vol_min = self.efficient_frontier()
 
-    def efficient_frontier(self,plot_color='black', dot_color='red', asset_color='black'):
-        plt.title('Efficient Frontier')
-        plt.xlabel(r'$\sigma$')
-        plt.ylabel(r'$\mu$')
 
-        # initialize the mu range for the portfolios on the efficient frontier
+
+    def efficient_frontier(self):
+        """
+        Return the efficient frontier and the minimum variance portfolio.
+        """
         mu = self.expected_return_vector
-        mu_range = np.linspace(np.min(mu), np.max(mu), 20)
+
+        mu_ = np.linspace(np.min(mu), np.max(mu), 20)
+
         # Retrieve and initialize the e-vector and the inverse covariance matrix
         e = np.ones(len(self.cov_matrix))
         Vi = self.inv_cov_matrix
@@ -94,68 +118,90 @@ class Portfolio:
 
         # Calculate the variance range for the portfolios on the efficient frontier
 
-        var_range = A * ( mu_range - B/A) **2 /(A*C - B*B) + 1/A
+        vol_ = np.sqrt(A * ( mu_ - B/A) **2 /(A*C - B*B) + 1/A)
 
         # Calculate the minimum variance portfolio coordinates
-        min_var_portfolio = np.sqrt(1/A)
-        min_var_return = B/A
+        vol_min = np.sqrt(1/A)
+        mu_min = B/A
 
-        # Plot the efficient frontier
-        plt.plot(np.sqrt(var_range), mu_range, label=f'EF Assets: {self.stock_names}', color=plot_color)
-
-        # Plot (σ, µ) coordinates of each stock
-        for vol, ret, name in zip(self.volatility_vector, self.expected_return_vector, self.stock_names):
-            plt.scatter(vol, ret, color=dot_color)
-            plt.text(vol, ret, name, fontsize=9, ha='right', va='bottom')
-
-        # Plot the coordinates of the minimum variance portfolio
-        plt.scatter(min_var_portfolio, min_var_return, color=dot_color)
-        plt.text(min_var_portfolio, min_var_return, r'$\mu_{min}$', fontsize=9, ha='right', va='bottom')
-    
-        plt.legend()
-
-        
+        return mu_, vol_, mu_min, vol_min
 
 
-
-
-    def fit_portfolio(self):
-        n = len(self.stocks)
-        fig, axes = plt.subplots(1, n, figsize=(5 * n, 4), constrained_layout=True)
-        if n == 1:
-            axes = [axes]  # handle 1-stock case
-
-        for i, (ax, stock) in enumerate(zip(axes, self.stocks)):
-            expected_return_fit = stock.get_expected_return_fit()
-            volatility_fit = stock.get_volatility_fit()
-            dist = stock.get_stock_dist()
-            # Generate a range based on the fitted values (for better alignment)
-            x = np.linspace(expected_return_fit - 4*volatility_fit, expected_return_fit + 4*volatility_fit, 1000)
-            p = stats.norm.pdf(x, expected_return_fit, volatility_fit)
-            ax.plot(x, p, label=f'Fitted', color='red')
-            ax.hist(dist, bins=10, density=True, alpha=0.6, color='b', label='Empirical')
-            ax.set_title(f'Stock {i+1}: {stock.get_stock_name()}')
-            ax.set_xlabel('Returns')
-            ax.set_ylabel('Density')
-            ax.legend()
-
-    def show_corr_and_cov_matrix(self):
+    def plot_efficient_frontier(self):
         """
-        Show the correlation and covariance matrix.
+        Plot the efficient frontier and the minimum variance portfolio.
+        """
+        plt.plot(self.ef_vol, self.ef_mu, color='blue')
+        plt.scatter(self.ef_vol_min, self.ef_mu_min, color='red', label=r'$(\sigma_{min}, \mu_{min})$')
+    
+
+        for i, (vol, ret) in enumerate(zip(self.volatility_vector, self.expected_return_vector)):
+            plt.scatter(vol, ret, color='blue')
+            plt.text(1.008*vol, ret, self.stock_names[i], fontsize=9, ha='left', va='center')
+
+        plt.title('Efficient Frontier: ' + ', '.join(self.stock_names))
+        plt.xlabel(r'$\sigma$')
+        plt.ylabel(r'$\mu$')
+        plt.legend(loc='upper left')
+        plt.show()
+
+    def plot_portfolio_fit(self):
+        """
+        Plot the portfolio fitted distribution and the empirical distribution.
+        """
+        n = len(self.stocks)
+        n_cols = min(2, n)
+        n_rows = (n + n_cols - 1) // n_cols  # ceiling division
+
+        fig, axes = plt.subplots(n_rows, n_cols, constrained_layout=True)
+        axes = np.atleast_1d(axes)  # Ensure axes is always an array
+
+        # Flatten axes for easy iteration, if axes is 2D
+        axes_flat = axes.ravel() if hasattr(axes, 'ravel') else [axes]
+
+        for i, (stock, ax) in enumerate(zip(self.stocks, axes_flat)):
+            # get the fitted values and the empirical distribution
+            mu_fit = stock.get_expected_return_fit()
+            sigma_fit = stock.get_volatility_fit()
+            dist = stock.get_stock_dist()
+
+            # Generate a range based on the fitted values (for better alignment)
+            x = np.linspace(mu_fit - 4*sigma_fit, mu_fit + 4*sigma_fit, 1000)
+            p = stats.norm.pdf(x, mu_fit, sigma_fit)
+
+            # plot the fitted distribution and the empirical distribution
+            if i == 0:
+                ax.plot(x, p, color='red', label='Fit')
+                ax.hist(dist, bins=10, density=True, alpha=0.6, color='b', edgecolor='black', label='Empirical')
+                ax.legend(loc='upper left')
+                ax.set_xlabel(r'$\mu$')
+                ax.set_ylabel(r'Density')
+            else:
+                ax.plot(x, p, color='red')
+                ax.hist(dist, bins=10, density=True, alpha=0.6, color='b', edgecolor='black')
+            ax.set_title(f'Stock: {stock.get_stock_name()}')
+        # Hide unused axes if any
+        for j in range(i+1, n_rows * n_cols):
+            axes_flat[j].set_visible(False)
+        plt.show()
+
+    def plot_corr_and_cov_matrix(self):
+        """
+        Plot the correlation and covariance matrix.
         Plot both as side by side heatmaps, with stock names for each row/col.
         """
-        fig, axes = plt.subplots(1, 2, figsize=(12, 5), constrained_layout=True)
+        fig, axes = plt.subplots(1, 2, constrained_layout=True)
 
-        stock_names = self.stock_names if hasattr(self, 'stock_names') else [f"Stock {i+1}" for i in range(len(self.corr_matrix))]
+        stock_names = self.stock_names 
         im1 = axes[0].imshow(self.corr_matrix, cmap='coolwarm', interpolation='none', vmin=np.min(self.corr_matrix), vmax=np.max(self.corr_matrix))
-        axes[0].set_title('Correlation of Assets: ' + ', '.join(stock_names))
+        axes[0].set_title('Correlation Matrix')
         axes[0].set_xticks(np.arange(len(stock_names)))
         axes[0].set_xticklabels(stock_names, rotation=45, ha='right', fontsize=8)
         axes[0].set_yticks(np.arange(len(stock_names)))
         axes[0].set_yticklabels(stock_names, fontsize=8)
         plt.colorbar(im1, ax=axes[0], fraction=0.046, pad=0.04)
         im2 = axes[1].imshow(self.cov_matrix, cmap='coolwarm', interpolation='none', vmin=np.min(self.cov_matrix), vmax=np.max(self.cov_matrix))
-        axes[1].set_title('Covariance of Assets: ' + ', '.join(stock_names))
+        axes[1].set_title('Covariance Matrix')
         axes[1].set_xticks(np.arange(len(stock_names)))
         axes[1].set_xticklabels(stock_names, rotation=45, ha='right', fontsize=8)
         axes[1].set_yticks(np.arange(len(stock_names)))
@@ -166,7 +212,7 @@ class Portfolio:
 
   
 
-    def view_portfolio(self, plot=False):
+    def view_portfolio(self):
         """
         Display a nicely formatted table with detailed information for each stock in the portfolio.
         """
@@ -176,30 +222,27 @@ class Portfolio:
         
         # Create a DataFrame to store stock info
         table_data = {
-            "Stock Name": [],
-            "Initial Price": [],
-            "Current Price": [],
-            "Expected Return": [],
-            "Volatility": [],
-            "Fitted Expected Return": [],
-            "Fitted Volatility": []
+            "Stock": [],
+            "S_0": [],
+            "S_T": [],
+            "mu": [],
+            "sigma": [],
+            "mu_fit": [],
+            "sigma_fit": []
         }
 
         for stock in self.stocks:
             prices = stock.get_stock_price()
-            table_data["Stock Name"].append(stock.get_stock_name())
-            table_data["Initial Price"].append(f"{prices[0]:.2f}")
-            table_data["Current Price"].append(f"{prices[-1]:.2f}")
-            table_data["Expected Return"].append(f"{stock.get_expected_return():.4f}")
-            table_data["Volatility"].append(f"{stock.get_volatility():.4f}")
+            table_data["Stock"].append(stock.get_stock_name())
+            table_data["S_0"].append(f"{prices[0]:.2f}")
+            table_data["S_T"].append(f"{prices[-1]:.2f}")
+            table_data["mu"].append(f"{stock.get_expected_return():.4f}")
+            table_data["sigma"].append(f"{stock.get_volatility():.4f}")
 
-            table_data["Fitted Expected Return"].append(f"{stock.get_expected_return_fit():.4f}")
-            table_data["Fitted Volatility"].append(f"{stock.get_volatility_fit():.4f}")
+            table_data["mu_fit"].append(f"{stock.get_expected_return_fit():.4f}")
+            table_data["sigma_fit"].append(f"{stock.get_volatility_fit():.4f}")
 
         df = pd.DataFrame(table_data)
         print("\nPortfolio Composition and Statistics\n")
 
         print(tabulate(df, headers='keys', tablefmt='github', showindex=False))
-
-        if plot:
-            self.fit_portfolio()

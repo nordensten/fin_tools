@@ -152,6 +152,30 @@ class Option:
 
         return self.stock_price*norm.cdf(d1) - K*np.exp(-self.risk_free_rate*T)*norm.cdf(d2)
 
+    def plot_implied_volatility(self):
+        fig, ax = plt.subplots(1,2, constrained_layout=True)
+        ax[0].plot(self.strikes, self.implied_volatilities, marker='o', color='blue', label='Market IV')
+        ax[0].plot(self.strikes, self.estimated_iv, marker='o', color='red', label='Estimated IV')
+        ax[0].set_title('Implied Volatility: ' + self.ticker.info['symbol'])
+        ax[0].set_xlabel('K')
+        ax[0].set_ylabel('IV')
+        ax[0].set_xticks(self.strikes)
+        ax[0].set_xticklabels([str(k) for k in self.strikes])
+        ax[0].set_yticks(np.sort(np.concatenate((self.implied_volatilities, self.estimated_iv))))
+        ax[0].set_yticklabels([f'{iv:.1%}' for iv in np.sort(np.concatenate((self.implied_volatilities, self.estimated_iv)))])
+
+        ax[1].plot(self.strikes, (self.implied_volatilities - self.estimated_iv) / self.estimated_iv, marker='o', color='blue')
+        ax[1].set_title('Relative Difference between Market IV and Estimated IV')
+        ax[1].set_xlabel('K')
+        ax[1].set_ylabel('rel. difference')
+        ax[1].set_xticks(self.strikes)
+        ax[1].set_xticklabels([str(k) for k in self.strikes])
+        ax[1].set_yticks((self.implied_volatilities - self.estimated_iv) / self.estimated_iv)
+        ax[1].set_yticklabels([f'{iv:.2%}' for iv in (self.implied_volatilities - self.estimated_iv) / self.estimated_iv])
+
+        ax[0].legend()
+        plt.show()
+
 
     def implied_volatility_solver(self):
 
