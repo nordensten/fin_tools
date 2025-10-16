@@ -101,15 +101,16 @@ class Option:
         # get the option contracts
         self.option_contracts = self.calls[['contractSymbol', 'strike', 'lastPrice', 'bid', 'ask', 'volume', 'openInterest', 'impliedVolatility']]
 
+    
 
-
-    def set_closest_strikes(self, strike_price, N):
-        # # Find strikes: at least 2 below, 2 above, and 1 closest to S0
+    def set_closest_strikes(self,N):
         strikes_sorted = self.option_contracts['strike'].sort_values().values
+        selected_strikes = []
 
-        # # Find the index of the strike closest to S0
-        closest_idx = (abs(strikes_sorted - strike_price)).argmin()
+        # Find the index of the strike closest to S0
+        closest_idx = (abs(strikes_sorted - self.stock_price)).argmin()
 
+        # Find strikes: at N below, N above, and 1 closest to S0
         indices = []
         for offset in range(-N, N+1):
             idx = closest_idx + offset
@@ -154,24 +155,24 @@ class Option:
 
     def plot_implied_volatility(self):
         fig, ax = plt.subplots(1,2, constrained_layout=True)
-        ax[0].plot(self.strikes, self.implied_volatilities, marker='o', color='blue', label='Market IV')
-        ax[0].plot(self.strikes, self.estimated_iv, marker='o', color='red', label='Estimated IV')
+        ax[0].plot(self.strikes/self.stock_price, self.implied_volatilities, marker='o', color='blue', label='Market IV')
+        ax[0].plot(self.strikes/self.stock_price, self.estimated_iv, marker='o', color='red', label='Estimated IV')
         ax[0].set_title('Implied Volatility: ' + self.ticker.info['symbol'])
         ax[0].set_xlabel('K')
         ax[0].set_ylabel('IV')
-        ax[0].set_xticks(self.strikes)
-        ax[0].set_xticklabels([str(k) for k in self.strikes])
-        ax[0].set_yticks(np.sort(np.concatenate((self.implied_volatilities, self.estimated_iv))))
-        ax[0].set_yticklabels([f'{iv:.1%}' for iv in np.sort(np.concatenate((self.implied_volatilities, self.estimated_iv)))])
+        # ax[0].set_xticks(self.strikes)
+        # ax[0].set_xticklabels([str(k) for k in self.strikes])
+        # ax[0].set_yticks(np.sort(np.concatenate((self.implied_volatilities, self.estimated_iv))))
+        # ax[0].set_yticklabels([f'{iv:.1%}' for iv in np.sort(np.concatenate((self.implied_volatilities, self.estimated_iv)))])
 
         ax[1].plot(self.strikes, (self.implied_volatilities - self.estimated_iv) / self.estimated_iv, marker='o', color='blue')
         ax[1].set_title('Relative Error of IVs')
         ax[1].set_xlabel('K')
         ax[1].set_ylabel('rel. error')
-        ax[1].set_xticks(self.strikes)
-        ax[1].set_xticklabels([str(k) for k in self.strikes])
-        ax[1].set_yticks((self.implied_volatilities - self.estimated_iv) / self.estimated_iv)
-        ax[1].set_yticklabels([f'{iv:.2%}' for iv in (self.implied_volatilities - self.estimated_iv) / self.estimated_iv])
+        # ax[1].set_xticks(self.strikes)
+        # ax[1].set_xticklabels([str(k) for k in self.strikes])
+        # ax[1].set_yticks((self.implied_volatilities - self.estimated_iv) / self.estimated_iv)
+        # ax[1].set_yticklabels([f'{iv:.2%}' for iv in (self.implied_volatilities - self.estimated_iv) / self.estimated_iv])
 
         ax[0].legend()
         plt.show()
@@ -263,7 +264,7 @@ class Option:
                 print("=======================")
                 print("Contracts:")
                 print(" ")
-                print(tabulate(self.option_contracts, headers='keys', tablefmt='github', showindex=False))
+                print(tabulate(self.option_contracts, headers='keys', tablefmt='github', showindex=True))
                 print(" ")
                 print("=======================")
 
