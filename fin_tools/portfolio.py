@@ -131,12 +131,12 @@ class Portfolio:
         """
         Plot the efficient frontier and the minimum variance portfolio.
         """
-        plt.plot(self.ef_vol, self.ef_mu, color='blue')
-        plt.scatter(self.ef_vol_min, self.ef_mu_min, color='red', label=r'$(\sigma_{min}, \mu_{min})$')
+        plt.plot(self.ef_vol, self.ef_mu, color='black')
+        plt.scatter(self.ef_vol_min, self.ef_mu_min, color='darkred', label=r'$(\sigma_{min}, \mu_{min})$')
     
 
         for i, (vol, ret) in enumerate(zip(self.volatility_vector, self.expected_return_vector)):
-            plt.scatter(vol, ret, color='blue')
+            plt.scatter(vol, ret, color='black')
             plt.text(1.008*vol, ret, self.stock_names[i], fontsize=9, ha='left', va='center')
 
         plt.title('Efficient Frontier: ' + ', '.join(self.stock_names))
@@ -171,14 +171,14 @@ class Portfolio:
 
             # plot the fitted distribution and the empirical distribution
             if i == 0:
-                ax.plot(x, p, color='red', label='Fit')
-                ax.hist(dist, bins=10, density=True, alpha=0.6, color='b', edgecolor='black', label='Empirical')
+                ax.plot(x, p, color='darkred', label='Fit')
+                ax.hist(dist, bins=10, density=True, alpha=0.6, color='black', edgecolor='darkgrey', label='Empirical')
                 ax.legend(loc='upper left')
                 ax.set_xlabel(r'$\mu$')
                 ax.set_ylabel(r'Density')
             else:
-                ax.plot(x, p, color='red')
-                ax.hist(dist, bins=10, density=True, alpha=0.6, color='b', edgecolor='black')
+                ax.plot(x, p, color='darkred')
+                ax.hist(dist, bins=10, density=True, alpha=0.6, color='black', edgecolor='darkgrey')
             ax.set_title(f'Stock: {stock.get_stock_name()}')
         # Hide unused axes if any
         for j in range(i+1, n_rows * n_cols):

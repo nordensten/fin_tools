@@ -19,7 +19,7 @@ def compare_portfolios(portfolios,N=20):
     plt.xlabel(r'$\sigma$')
     plt.ylabel(r'$\mu$')
 
-    colors = ['black','darkgrey']
+    colors = ['blue','red','green','purple','orange','yellow','brown','pink','gray','black']
 
     mu_vectors = []
     vol_vectors = []
